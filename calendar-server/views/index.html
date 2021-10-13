@@ -15,8 +15,6 @@
 
     <script type="text/javascript">
       // Client ID and API key from the Developer Console
-      var CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-      var API_KEY = process.env.API_KEY;
 
       // Array of API discovery doc URLs for APIs used by the quickstart
       var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
@@ -27,7 +25,11 @@
 
       var authorizeButton = document.getElementById('authorize_button');
       var signoutButton = document.getElementById('signout_button');
-
+      var env = {
+        GOOGLE_API_KEY: '<%= GOOGLE_API_KEY %>',
+        GOOGLE_CLIENT_ID: '<%= GOOGLE_CLIENT_ID %>',
+      }
+      console.log('*** variables ***', env);
       /**
        *  On load, called to load the auth2 library and API client library.
        */
@@ -41,8 +43,8 @@
        */
       function initClient() {
         gapi.client.init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
+          apiKey: env.GOOGLE_API_KEY,
+          clientId: env.GOOGLE_CLIENT_ID,
           discoveryDocs: DISCOVERY_DOCS,
           scope: SCOPES
         }).then(function () {
@@ -115,6 +117,19 @@
         }).then(function(response) {
           var events = response.result.items;
           appendPre('Upcoming events:');
+          
+          fetch('/', {
+            method: 'POST', 
+            mode: 'cors', 
+            cache: 'no-cache', 
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer',
+            body: JSON.stringify(events)
+          });
 
           if (events.length > 0) {
             for (i = 0; i < events.length; i++) {

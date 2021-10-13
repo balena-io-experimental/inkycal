@@ -1,4 +1,6 @@
 version: '2.1'
+volumes:
+  calendar-data: {}
 services:
   inkyshot:
     build:
@@ -7,6 +9,19 @@ services:
     labels:
       io.balena.features.balena-api: '1'
       io.balena.features.supervisor-api: '1'
+    volumes:
+      - 'calendar-data:/usr/app/calendar-data'
+  calendar-server:
+    build:
+      context: ./calendar-server
+    privileged: true
+    labels:
+      io.balena.features.balena-api: '1'
+      io.balena.features.supervisor-api: '1'
+    ports:
+      - "80:80"
+    volumes:
+      - 'calendar-data:/usr/app/calendar-data'
   wifi-connect:
     build:
       context: ./wifi-connect

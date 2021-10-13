@@ -1,0 +1,30 @@
+{
+  "name": "inkycal",
+  "version": "1.0.0",
+  "description": "Device showing nearest personal calendar event",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/balena-io-playground/inkycal.git"
+  },
+  "keywords": [
+    "inkycal",
+    "calendar",
+    "events"
+  ],
+  "author": "balena",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/balena-io-playground/inkycal/issues"
+  },
+  "homepage": "https://github.com/balena-io-playground/inkycal#readme",
+  "dependencies": {
+    "express": "~4.17.1",
+    "gapi": "0.0.3",
+    "serve-favicon": "~2.5.0"
+  }
+}

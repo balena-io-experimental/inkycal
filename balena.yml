@@ -25,6 +25,8 @@ data:
     - QOD_CATEGORY: inspire
     - FONT: AmaticSC
     - TEST_CHARACTER: a
+    - GOOGLE_CLIENT_ID:
+    - GOOGLE_API_KEY:
   defaultDeviceType: raspberry-pi
   supportedDeviceTypes:
     - raspberry-pi

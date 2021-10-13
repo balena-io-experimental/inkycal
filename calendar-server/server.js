@@ -35,7 +35,7 @@ const isJson = (req) => {
   return JSON_REGEXP.test(contentType);
 };
 // app.use(bodyParser.json({ type: isJson, limit: '512kb' }));
-var jsonParser = bodyParser.json({ type: isJson, limit: '512kb' })
+const jsonParser = bodyParser.json({ type: isJson, limit: '512kb' })
 
 // reply to request with the hello world html file
 app.get('/', function (req, res) {
@@ -46,12 +46,10 @@ app.get('/', function (req, res) {
 })
 
 app.post('/', jsonParser, function (req, res) {
-
   console.log('REQUEST', req.body);
-
   fs.writeFileSync(
     '/usr/app/calendar-data/events.json',
-    JSON.stringify(req)
+    JSON.stringify(req.body)
   );
   sdk.request.send({
     method: 'POST',

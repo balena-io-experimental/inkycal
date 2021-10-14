@@ -356,15 +356,8 @@ elif target_display == 'quote':
             if not os.path.isfile(CALENDAR_EVENTS_FS_PATH):
                 message = 'Loading...'
             else:
-                all_events = []
-
-                with open(CALENDAR_EVENTS_FS_PATH) as f:
-                    raw_content = f.read()
-                    all_events = json.loads(raw_content)['items']
-
-                # Event summary: event['summary']
-                # Event start time: event['start']['dateTime']
-                
+                if len(sys.argv) >= 1:
+                    message = ' '.join(sys.argv[1:])
 
             # response = requests.get(
             #     f"https://quotes.rest/qod?category={CATEGORY}&language={LANGUAGE}",

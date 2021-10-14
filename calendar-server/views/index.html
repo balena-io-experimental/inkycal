@@ -4,16 +4,21 @@
 <head>
   <title>Google Calendar API Quickstart</title>
   <meta charset="utf-8" />
+  <link rel="stylesheet" href="./public/style.css">
 </head>
 
 <body>
-  <p>Google Calendar API Quickstart</p>
-
-  <!--Add buttons to initiate auth sequence and sign out-->
-  <button id="authorize_button" style="display: none;">Authorize</button>
-  <button id="signout_button" style="display: none;">Sign Out</button>
-
-  <pre id="content" style="white-space: pre-wrap;"></pre>
+  <div id="main-container">
+    <h2 id="main-container-title">Inkycal</h2>
+    <div id="content-container">
+      <p id="main-container-info-text"></p>
+      <!--Add buttons to initiate auth sequence and sign out-->
+      <button id="authorize_button" style="display: none;">Authorize</button>
+      <button id="signout_button" style="display: none;">Sign Out</button>
+    </div>
+  
+    <pre id="content" style="white-space: pre-wrap;"></pre>
+  </div>
 
   <script type="text/javascript">
     // Client ID and API key from the Developer Console
@@ -58,7 +63,7 @@
         authorizeButton.onclick = handleAuthClick;
         signoutButton.onclick = handleSignoutClick;
       }, function (error) {
-        appendPre(JSON.stringify(error, null, 2));
+        append('#content', JSON.stringify(error, null, 2));
       });
     }
 
@@ -69,10 +74,12 @@
     function updateSigninStatus(isSignedIn) {
       const token = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
       if (isSignedIn) {
+        append('#main-container-info-text', 'You are already logged in! If you want to change account, please signuout and login again');
         authorizeButton.style.display = 'none';
         signoutButton.style.display = 'block';
         updateApiToken(token);
       } else {
+        append('#main-container-info-text', 'Please login with yout Google account to allow this application to get all the calendar events');
         authorizeButton.style.display = 'block';
         signoutButton.style.display = 'none';
         updateApiToken(null);
@@ -97,7 +104,7 @@
           body: JSON.stringify({ authToken: token })
         });
       } catch (err) {
-        appendPre(JSON.stringify(err, null, 2));
+        appendPre('#content', JSON.stringify(err, null, 2));
       }
     }
 
@@ -116,15 +123,18 @@
     }
 
     /**
-     * Append a pre element to the body containing the given message
-     * as its text node. Used to display the results of the API call.
+     * Append some text to an element
      *
+     * @param {string} selector Element selector (class or ID).
      * @param {string} message Text to be placed in pre element.
      */
-    function appendPre(message) {
-      var pre = document.getElementById('content');
+    function append(selector, message) {
+      var element = document.querySelector(selector);
+      if(!element) {
+        return;
+      }
       var textContent = document.createTextNode(message + '\n');
-      pre.appendChild(textContent);
+      element.appendChild(textContent);
     }
 
   </script>

@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+}
+
+#main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 100vw;
+  min-height: 100vh;
+}
+
+button {
+  display: block;
+  border: 1px solid #eee;
+  padding: 10px 20px;
+  border-radius: 10px;
+  color: white;
+}
+
+#authorize_button {
+  background: white;
+  color: black;
+}
+
+#signout_button {
+  background: #ff4040;
+  color: white;
+}

@@ -5,9 +5,10 @@ const { join } = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { getSdk } = require('balena-sdk');
-// const favicon = require('serve-favicon');
+const favicon = require('serve-favicon');
 const app = express();
 const PORT = 80;
+const POLL_INTERVAL = process.env.EVENTS_POLL || 600000; // 10 minutes by default
 const calendarId = 'primary';
 const AUTH_TOKEN_FS_PATH = '/usr/app/auth-data/authToken';
 const CALENDAR_EVENTS_FS_PATH = '/usr/app/calendar-data/events.json';
@@ -17,7 +18,7 @@ const sdk = getSdk({
 	apiUrl: process.env.BALENA_API_URL,
 });
 
-// app.use(favicon(join(__dirname, 'public', 'favicon.ico')))
+app.use(favicon(join(__dirname, 'public', 'favicon.ico')));
 app.set('views', join(__dirname, 'views'));
 
 app.engine('html', require('ejs').renderFile);
@@ -53,7 +54,7 @@ app.post('/', jsonParser, (req, res) => {
 	}
 	console.log('authToken ', authToken);
 	fs.writeFileSync(AUTH_TOKEN_FS_PATH, authToken);
-	init();
+	updateEvents();
 	res.send('OK');
 });
 
@@ -62,33 +63,40 @@ app.listen(PORT, () => {
 	console.log(`App listening on port ${PORT}`);
 });
 
-const init = () => {
+const updateEvents = async () => {
 	const authToken =
 		fs.existsSync(AUTH_TOKEN_FS_PATH) &&
 		fs.readFileSync(AUTH_TOKEN_FS_PATH, 'utf8');
 	if (!authToken || !authToken.length) {
 		return;
 	}
-	sdk.request
-		.send({
-			method: 'GET',
-			url: `/calendar/v3/calendars/${calendarId}/events?futureevents=true&orderby=starttime&sortorder=ascending&maxResults=10&timeMin=${new Date().toISOString()}&showDeleted=false`,
-			baseUrl: 'https://www.googleapis.com',
-			sendToken: false,
-			headers: {
-				Authorization: `Bearer ${authToken}`,
-			},
-		})
-		.then(data => {
-			const events = data.body;
-			console.log('EVENTS RESPONE : ', events);
-			fs.writeFileSync(CALENDAR_EVENTS_FS_PATH, JSON.stringify(events));
-			restartSupervisor();
-		});
+	const data = await sdk.request.send({
+		method: 'GET',
+		url: `/calendar/v3/calendars/${calendarId}/events?futureevents=true&orderby=starttime&sortorder=ascending&maxResults=10&timeMin=${new Date().toISOString()}&showDeleted=false`,
+		baseUrl: 'https://www.googleapis.com',
+		sendToken: false,
+		headers: {
+			Authorization: `Bearer ${authToken}`,
+		},
+	});
+	const events = data.body;
+	console.log('EVENTS RESPONE : ', events);
+	const storedEvents = fs.existsSync(CALENDAR_EVENTS_FS_PATH)
+		? fs.readFileSync(CALENDAR_EVENTS_FS_PATH, 'utf-8')
+		: '';
+	if (JSON.stringify(events) === storedEvents) {
+		return;
+	}
+	fs.writeFileSync(CALENDAR_EVENTS_FS_PATH, JSON.stringify(events));
+	try {
+		await restartDisplayService();
+	} catch {
+		console.log('Restarting the display service failed');
+	}
 };
 
-const restartSupervisor = () => {
-	sdk.request.send({
+const restartDisplayService = async () => {
+	await sdk.request.send({
 		method: 'POST',
 		url: `/v2/applications/${process.env.BALENA_APP_ID}/restart-service`,
 		baseUrl: process.env.BALENA_SUPERVISOR_ADDRESS,
@@ -99,4 +107,21 @@ const restartSupervisor = () => {
 	});
 };
 
-init();
+const poll = ({ fn, interval = POLL_INTERVAL, maxAttempts }) => {
+	let attempts = 0;
+
+	const executePoll = async (resolve, reject) => {
+		const result = await fn();
+		attempts++;
+
+		if (maxAttempts && attempts === maxAttempts) {
+			return reject(new Error('Exceeded max attempts'));
+		} else {
+			setTimeout(executePoll, interval, resolve, reject);
+		}
+	};
+
+	return new Promise(executePoll);
+};
+
+poll({ fn: updateEvents });

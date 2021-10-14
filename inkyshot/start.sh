@@ -20,14 +20,14 @@ python /usr/app/update-display.py
 # Save out the current env to a file so cron job can use it
 export -p > /usr/app/env.sh
 
-ALTERNATE_FREQUENCY=1 # minutes
+UDPATE_FREQUENCY="${UDPATE_FREQUENCY:-1}" # minutes
 
 # Set default values if these env vars are not set
 if [[ -z "${ALTERNATE_FREQUENCY}" ]]; then
   Alternate="0"
   [[ -z "${UPDATE_HOUR}" ]] && UpdateHour='9' || UpdateHour="${UPDATE_HOUR}"
 else
-  Alternate="*/${ALTERNATE_FREQUENCY}"
+  Alternate="*/${UDPATE_FREQUENCY}"
   UpdateHour='*'
 fi
 

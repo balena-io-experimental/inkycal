@@ -23,13 +23,16 @@ export -p > /usr/app/env.sh
 UDPATE_FREQUENCY="${UDPATE_FREQUENCY:-1}" # minutes
 
 # Set default values if these env vars are not set
-if [[ -z "${ALTERNATE_FREQUENCY}" ]]; then
-  Alternate="0"
-  [[ -z "${UPDATE_HOUR}" ]] && UpdateHour='9' || UpdateHour="${UPDATE_HOUR}"
-else
-  Alternate="*/${UDPATE_FREQUENCY}"
-  UpdateHour='*'
-fi
+# if [[ -z "${ALTERNATE_FREQUENCY}" ]]; then
+#   Alternate="0"
+#   [[ -z "${UPDATE_HOUR}" ]] && UpdateHour='9' || UpdateHour="${UPDATE_HOUR}"
+# else
+#   Alternate="*/${UDPATE_FREQUENCY}"
+#   UpdateHour='*'
+# fi
+
+Alternate="*/${UDPATE_FREQUENCY}"
+UpdateHour='*'
 
 # Add the job to the crontab using update_hour var, defaulting to 9 AM
 (echo "${Alternate} ${UpdateHour} * * * /usr/app/run-update.sh > /proc/1/fd/1 2>&1") | crontab -

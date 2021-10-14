@@ -88,6 +88,7 @@ const updateEvents = async () => {
 			events.items.forEach((item) => {
 				delete item.attendees;
 			});
+			const now = new Date();
 			events.items = events.items.filter(
 				({ start }) => new Date(start.dateTime ?? start.date) >= now,
 			);
@@ -104,6 +105,7 @@ const updateEvents = async () => {
 				console.log('Restarting the display service failed');
 			}
 		} catch (err) {
+			console.log(err)
 			fs.writeFileSync(
 				CALENDAR_EVENTS_FS_PATH,
 				'Please login into your Google account again from the device URL',

@@ -1,4 +1,5 @@
 /* eslint-env es6 */
+
 const fs = require('fs')
 const { join } = require('path')
 const express = require('express')
@@ -7,12 +8,12 @@ const { getSdk } = require('balena-sdk');
 // const favicon = require('serve-favicon')
 const app = express()
 const PORT = 80
+const calendarId = 'primary';
 
 const sdk = getSdk({
   // only required if the device is not running on balena-cloud.com
   apiUrl: process.env.BALENA_API_URL
 });
-// sdk.loginWithToken(process.env.BALENA_API_KEY);
 
 // app.use(favicon(join(__dirname, 'public', 'favicon.ico')))
 app.set('views', join(__dirname, 'views'))
@@ -45,12 +46,45 @@ app.get('/', function (req, res) {
   });
 })
 
-app.post('/', jsonParser, function (req, res) {
-  console.log('REQUEST', req.body);
-  fs.writeFileSync(
-    '/usr/app/calendar-data/events.json',
-    JSON.stringify(req.body)
-  );
+app.post('/', jsonParser, (req, res) => {
+  const authToken = req.body.authToken;
+  if (!authToken) {
+    res.send('Missing Token');
+    return;
+  }
+  console.log('authToken ', authToken);
+  fs.writeFileSync('/usr/app/auth-data/authToken', authToken);
+  init();
+  res.send('OK');
+})
+
+// start a server on port 80 and log its start to our console
+app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}`)
+})
+
+const init = () => {
+  const authToken = fs.readFileSync('/usr/app/auth-data/authToken', 'utf8');
+  if (!authToken || !authToken.length) {
+    return;
+  }
+  sdk.request.send({
+    method: 'GET',
+    url: `/calendar/v3/calendars/${calendarId}/events?futureevents=true&orderby=starttime&sortorder=ascending&maxResults=10&timeMin=${(new Date()).toISOString()}&showDeleted=false`,
+    baseUrl: 'https://www.googleapis.com',
+    sendToken: false,
+    headers: {
+      Authorization: `Bearer ${authToken}`
+    }
+  }).then((data) => {
+    const events = data.body;
+    console.log('EVENTS RESPONE : ', events);
+    // fs.writeFileSync('/usr/app/calendar-data/events.json', JSON.stringify(events));
+    restartSupervisor();
+  });
+}
+
+const restartSupervisor = () => {
   sdk.request.send({
     method: 'POST',
     url: `/v2/applications/${process.env.BALENA_APP_ID}/restart-service`,
@@ -60,10 +94,6 @@ app.post('/', jsonParser, function (req, res) {
       serviceName: 'inkyshot'
     },
   });
-  res.render('OK');
-})
+}
 
-// start a server on port 80 and log its start to our console
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`)
-})
+init();

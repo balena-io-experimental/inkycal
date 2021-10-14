@@ -35,4 +35,4 @@ COPY update-display.py .
 
 CMD ["/bin/bash","start.sh"]
 
-ENV DEVICE_HOSTNAME inkyshot
+ENV DEVICE_HOSTNAME inkycal

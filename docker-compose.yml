@@ -1,5 +1,6 @@
 version: '2.1'
 volumes:
+  auth-data: {}
   calendar-data: {}
 services:
   inkyshot:
@@ -10,6 +11,7 @@ services:
       io.balena.features.balena-api: '1'
       io.balena.features.supervisor-api: '1'
     volumes:
+      - 'auth-data:/usr/app/auth-data'
       - 'calendar-data:/usr/app/calendar-data'
   calendar-server:
     build:

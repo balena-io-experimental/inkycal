@@ -7,6 +7,9 @@ from os import environ
 import sys
 import textwrap
 import time
+from dateutil.parser import parse as datetime_parser
+from datetime import datetime, date
+from dateutil.tz import UTC
 
 from font_amatic_sc import AmaticSC
 from font_caladea import Caladea
@@ -357,28 +360,52 @@ elif target_display == 'quote':
             if not os.path.isfile(CALENDAR_EVENTS_FS_PATH):
                 message = 'Loading...'
             else:
+                message = 'No upcoming events!'
+                all_events = []
+
                 with open(CALENDAR_EVENTS_FS_PATH) as f:
                     raw_content = f.read()
-                    logging.info(raw_content)
-                    events = None
                     try:
-                        jsonParsedEvents = json.loads(raw_content)
-                        events = jsonParsedEvents['items']
-                        logging.info(f"len(events): {len(events)}")
-                    except:
+                        all_events = json.loads(raw_content)['items']
+                        logging.info(f"len(all_events): {len(all_events)}")
+                        for event in all_events:
+                            if event['status'] == 'cancelled':
+                                # Event cancelled -> skip
+                                continue
+
+                            if 'date' in event['start']:
+                                current_time = datetime.now()
+                                start_time = datetime_parser(event['start']['date'])
+                            else:
+                                current_time = datetime.now().astimezone(UTC)
+                                start_time = datetime_parser(event['start']['dateTime']).astimezone(UTC)
+
+                            if current_time > start_time:
+                                # Event started -> skip
+                                continue
+
+                            if 'summary' not in event:
+                                # Event with no summary
+                                continue
+
+                            time_delta = start_time - current_time
+                            hours, remainder = divmod(time_delta.total_seconds(), 3600)
+                            minutes, seconds = divmod(remainder, 60)
+
+                            message = f"Upcoming event: {event['summary']} in {int(hours)} hour(s) and {int(minutes)} minute(s)."
+                            if 'COUNTDOWN_THRESHOLD' in os.environ:
+                                try:
+                                    countdown_threshold = int(os.environ['COUNTDOWN_THRESHOLD'])
+                                    if hours > countdown_threshold:
+                                        start_time = datetime_parser(event['start']['dateTime'])
+                                        message = f"Upcoming event: {event['summary']} - {start_time.strftime('%Y-%m-%d %H:%M')}."
+                                except:
+                                    # use countdown format if countdown_threshold is invalid
+                                    pass
+                            
+                    except json.decoder.JSONDecodeError:
                         logging.info("Non json file content")
-
-                    if events is None:
                         message = raw_content
-                    elif len(events) == 0:
-                        message = 'No upcoming events!'
-                    else:
-                        logging.info("next_event.summary")
-                        next_event = events[0]
-                        message = next_event['summary'] + ' ' + next_event['start']['dateTime']
-
-                # Event summary: event['summary']
-                # Event start time: event['start']['dateTime']
 
             # response = requests.get(
             #     f"https://quotes.rest/qod?category={CATEGORY}&language={LANGUAGE}",

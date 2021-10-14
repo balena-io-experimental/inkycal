@@ -1,12 +1,13 @@
 body {
   margin: 0;
+  font-family: sans-serif;
 }
 
 #main-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   min-width: 100vw;
   min-height: 100vh;
 }
@@ -19,12 +20,28 @@ button {
   color: white;
 }
 
+button:hover {
+  cursor: pointer;
+}
+
 #authorize_button {
-  background: white;
-  color: black;
+  background: #35A52D;
 }
 
 #signout_button {
   background: #ff4040;
-  color: white;
+}
+
+#content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#main-container-title {
+  text-transform: uppercase;
+}
+
+#main-container-info-text {
+  margin: 20px;
 }

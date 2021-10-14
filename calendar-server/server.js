@@ -68,30 +68,47 @@ const updateEvents = async () => {
 		fs.existsSync(AUTH_TOKEN_FS_PATH) &&
 		fs.readFileSync(AUTH_TOKEN_FS_PATH, 'utf8');
 	if (!authToken || !authToken.length) {
-		return;
-	}
-	const data = await sdk.request.send({
-		method: 'GET',
-		url: `/calendar/v3/calendars/${calendarId}/events?futureevents=true&orderby=starttime&sortorder=ascending&maxResults=10&timeMin=${new Date().toISOString()}&showDeleted=false`,
-		baseUrl: 'https://www.googleapis.com',
-		sendToken: false,
-		headers: {
-			Authorization: `Bearer ${authToken}`,
-		},
-	});
-	const events = data.body;
-	console.log('EVENTS RESPONE : ', events);
-	const storedEvents = fs.existsSync(CALENDAR_EVENTS_FS_PATH)
-		? fs.readFileSync(CALENDAR_EVENTS_FS_PATH, 'utf-8')
-		: '';
-	if (JSON.stringify(events) === storedEvents) {
-		return;
-	}
-	fs.writeFileSync(CALENDAR_EVENTS_FS_PATH, JSON.stringify(events));
-	try {
-		await restartDisplayService();
-	} catch {
-		console.log('Restarting the display service failed');
+		fs.writeFileSync(
+			CALENDAR_EVENTS_FS_PATH,
+			'Please login into your Google account first from the device URL',
+		);
+	} else {
+		try {
+			const { body: events } = await sdk.request.send({
+				method: 'GET',
+				// url: `/calendar/v3/calendars/${calendarId}/events?futureevents=true&orderby=starttime&sortorder=ascending&maxresults=10&timeMin=${new Date().toISOString()}&showdeleted=false`,
+				url: `/calendar/v3/calendars/${calendarId}/events?maxResults=10&orderBy=startTime&timeMin=${new Date().toISOString()}&singleEvents=true`,
+				baseUrl: 'https://www.googleapis.com',
+				sendToken: false,
+				headers: {
+					Authorization: `Bearer ${authToken}`,
+				},
+			});
+			console.log('EVENTS RESPONE : ', events);
+			events.items.forEach((item) => {
+				delete item.attendees;
+			});
+			events.items = events.items.filter(
+				({ start }) => new Date(start.dateTime ?? start.date) >= now,
+			);
+			const storedEvents = fs.existsSync(CALENDAR_EVENTS_FS_PATH)
+				? fs.readFileSync(CALENDAR_EVENTS_FS_PATH, 'utf-8')
+				: '';
+			if (JSON.stringify(events) === storedEvents) {
+				return;
+			}
+			fs.writeFileSync(CALENDAR_EVENTS_FS_PATH, JSON.stringify(events));
+			try {
+				await restartDisplayService();
+			} catch {
+				console.log('Restarting the display service failed');
+			}
+		} catch (err) {
+			fs.writeFileSync(
+				CALENDAR_EVENTS_FS_PATH,
+				'Please login into your Google account again from the device URL',
+			);
+		}
 	}
 };
 

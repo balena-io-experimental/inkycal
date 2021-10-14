@@ -74,11 +74,13 @@
     function updateSigninStatus(isSignedIn) {
       const token = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
       if (isSignedIn) {
+        document.querySelector('#main-container-info-text').innerHTML = ''
         append('#main-container-info-text', 'You are already logged in! If you want to change account, please signuout and login again');
         authorizeButton.style.display = 'none';
         signoutButton.style.display = 'block';
         updateApiToken(token);
       } else {
+        document.querySelector('#main-container-info-text').innerHTML = ''
         append('#main-container-info-text', 'Please login with yout Google account to allow this application to get all the calendar events');
         authorizeButton.style.display = 'block';
         signoutButton.style.display = 'none';

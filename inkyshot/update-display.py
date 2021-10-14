@@ -21,6 +21,8 @@ import arrow
 import geocoder
 import requests
 
+CALENDAR_EVENTS_FS_PATH = '/usr/app/calendar-data/events.json';
+
 icon_map = {
     "clearsky": 1,
     "cloudy": 4,
@@ -351,12 +353,21 @@ elif target_display == 'quote':
         message = os.environ['DEVICE_NAME']
     elif message is None:
         try:
-            response = requests.get(
-                f"https://quotes.rest/qod?category={CATEGORY}&language={LANGUAGE}",
-                headers={"Accept" : "application/json"}
-            )
-            data = response.json()
-            message = data['contents']['quotes'][0]['quote']
+            if not os.path.isfile(CALENDAR_EVENTS_FS_PATH):
+                message = 'Loading...'
+            else
+                f = open(CALENDAR_EVENTS_FS_PATH,'r')
+                lines = f.readlines()
+                print(lines)
+                # TODO: parse the json and figure out the next event
+                message = lines[0]
+
+            # response = requests.get(
+            #     f"https://quotes.rest/qod?category={CATEGORY}&language={LANGUAGE}",
+            #     headers={"Accept" : "application/json"}
+            # )
+            # data = response.json()
+            # message = data['contents']['quotes'][0]['quote']
         except requests.exceptions.RequestException as err:
             logging.error(err)
             FONT_SIZE = 25

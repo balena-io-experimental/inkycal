@@ -79,7 +79,7 @@ const init = () => {
   }).then((data) => {
     const events = data.body;
     console.log('EVENTS RESPONE : ', events);
-    // fs.writeFileSync('/usr/app/calendar-data/events.json', JSON.stringify(events));
+    fs.writeFileSync('/usr/app/calendar-data/events.json', JSON.stringify(events));
     restartSupervisor();
   });
 }

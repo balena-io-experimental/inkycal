@@ -353,11 +353,32 @@ elif target_display == 'quote':
         message = os.environ['DEVICE_NAME']
     elif message is None:
         try:
+            logging.info("I'm logging")
             if not os.path.isfile(CALENDAR_EVENTS_FS_PATH):
                 message = 'Loading...'
             else:
-                if len(sys.argv) >= 1:
-                    message = ' '.join(sys.argv[1:])
+                with open(CALENDAR_EVENTS_FS_PATH) as f:
+                    raw_content = f.read()
+                    logging.info(raw_content)
+                    events = None
+                    try:
+                        jsonParsedEvents = json.loads(raw_content)
+                        events = jsonParsedEvents['items']
+                        logging.info(f"len(events): {len(events)}")
+                    except:
+                        logging.info("Non json file content")
+
+                    if events is None:
+                        message = raw_content
+                    elif len(events) == 0:
+                        message = 'No upcoming events!'
+                    else:
+                        logging.info("next_event.summary")
+                        next_event = events[0]
+                        message = next_event['summary'] + ' ' + next_event['start']['dateTime']
+
+                # Event summary: event['summary']
+                # Event start time: event['start']['dateTime']
 
             # response = requests.get(
             #     f"https://quotes.rest/qod?category={CATEGORY}&language={LANGUAGE}",

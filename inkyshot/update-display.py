@@ -392,13 +392,13 @@ elif target_display == 'quote':
                             hours, remainder = divmod(time_delta.total_seconds(), 3600)
                             minutes, seconds = divmod(remainder, 60)
 
-                            message = f"Upcoming event: {event['summary']} in {int(hours)} hour(s) and {int(minutes)} minute(s)."
+                            message = f"{event['summary']} in {int(hours)} hour(s) and {int(minutes)} minute(s)."
                             if 'COUNTDOWN_THRESHOLD' in os.environ:
                                 try:
                                     countdown_threshold = int(os.environ['COUNTDOWN_THRESHOLD'])
                                     if hours > countdown_threshold:
                                         start_time = datetime_parser(event['start']['dateTime'])
-                                        message = f"Upcoming event: {event['summary']} - {start_time.strftime('%Y-%m-%d %H:%M')}."
+                                        message = f"{event['summary']} - {start_time.strftime('%Y-%m-%d %H:%M')}."
                                 except:
                                     # use countdown format if countdown_threshold is invalid
                                     pass

@@ -402,7 +402,7 @@ elif target_display == 'quote':
                                 except:
                                     # use countdown format if countdown_threshold is invalid
                                     pass
-                            
+                            break
                     except json.decoder.JSONDecodeError:
                         logging.info("Non json file content")
                         message = raw_content

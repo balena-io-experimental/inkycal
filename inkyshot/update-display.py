@@ -25,6 +25,7 @@ import geocoder
 import requests
 
 CALENDAR_EVENTS_FS_PATH = '/usr/app/calendar-data/events.json';
+CALENDAR_LAST_MESSAGE_FS_PATH = '/usr/app/calendar-data/last-message.txt';
 
 icon_map = {
     "clearsky": 1,
@@ -320,6 +321,8 @@ logging.info("Display dimensions: W %s x H %s", WIDTH, HEIGHT)
 # Reason the display mode based on environment variables and the current display (logic is explained in the readme)
 current_display = get_current_display()
 target_display = 'quote'
+skip_render = False
+
 if MODE == 'weather'  or (MODE == 'alternate' and current_display == 'quote'):
     target_display = 'weather'
 
@@ -407,19 +410,32 @@ elif target_display == 'quote':
                     except json.decoder.JSONDecodeError:
                         logging.info("Non json file content")
                         message = raw_content
-
-            # response = requests.get(
-            #     f"https://quotes.rest/qod?category={CATEGORY}&language={LANGUAGE}",
-            #     headers={"Accept" : "application/json"}
-            # )
-            # data = response.json()
-            # message = data['contents']['quotes'][0]['quote']
         except requests.exceptions.RequestException as err:
             logging.error(err)
             FONT_SIZE = 25
             message = "Sorry folks, today's quote has gone walkies :("
 
+    try:
+        if os.path.isfile(CALENDAR_LAST_MESSAGE_FS_PATH):
+            logging.info("Found: %s", CALENDAR_LAST_MESSAGE_FS_PATH)
+            with open(CALENDAR_LAST_MESSAGE_FS_PATH) as f_last_message:
+                last_message = f_last_message.read()
+                logging.info("Last message: %s", last_message)
+                if last_message == message:
+                    logging.info("Last message matches new one.")
+                    skip_render = True
+    except:
+        logging.info("Error while checking the last message")
+        pass
     logging.info("Message: %s", message)
+
+    try:
+        with open(CALENDAR_LAST_MESSAGE_FS_PATH, "w") as f_last_message:
+            f_last_message.write(message)
+    except:
+        logging.info("Error while writting the last message")
+        pass
+
     # Work out what size font is required to fit this message on the display
     message_does_not_fit = True
 
@@ -468,18 +484,18 @@ elif target_display == 'quote':
     y = (HEIGHT - h - offset_y)/2
     draw.multiline_text((x, y), output_text, BLACK, FONT, align="center", spacing=0)
 
-# Rotate and display the image
-if "ROTATE" in os.environ:
-    img = img.rotate(180)
+if not skip_render:
+    # Rotate and display the image
+    if "ROTATE" in os.environ:
+        img = img.rotate(180)
+    if WAVESHARE:
+        # epd does not have a set_image method.
+        display.display(display.getbuffer(img))
+    else:
+        display.set_image(img)
+        display.show()
 
-if WAVESHARE:
-    # epd does not have a set_image method.
-    display.display(display.getbuffer(img))
-else:
-    display.set_image(img)
-    display.show()
-
-logging.info("Done drawing")
+    logging.info("Done drawing")
 
 # Update device with the current display for ALTERNATE mode
 if MODE == 'alternate':

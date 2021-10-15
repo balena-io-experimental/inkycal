@@ -392,7 +392,8 @@ elif target_display == 'quote':
                             hours, remainder = divmod(time_delta.total_seconds(), 3600)
                             minutes, seconds = divmod(remainder, 60)
 
-                            message = f"{event['summary']} in {int(hours)} hour(s) and {int(minutes)} minute(s)."
+                            hoursLeft = f"{int(hours)} hour(s) and " if int(hours) > 0 else ''
+                            message = f"{event['summary']} in {hoursLeft} {int(minutes)} minute(s)."
                             if 'COUNTDOWN_THRESHOLD' in os.environ:
                                 try:
                                     countdown_threshold = int(os.environ['COUNTDOWN_THRESHOLD'])

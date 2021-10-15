@@ -397,7 +397,7 @@ elif target_display == 'quote':
                             if 'COUNTDOWN_THRESHOLD' in os.environ:
                                 try:
                                     countdown_threshold = int(os.environ['COUNTDOWN_THRESHOLD'])
-                                    if hours > countdown_threshold:
+                                    if hours >= countdown_threshold:
                                         start_time = datetime_parser(event['start']['dateTime'])
                                         message = f"{event['summary']} - {start_time.strftime('%Y-%m-%d %H:%M')}."
                                 except:

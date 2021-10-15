@@ -84,7 +84,7 @@ const updateEvents = async () => {
 					Authorization: `Bearer ${authToken}`,
 				},
 			});
-			console.log('EVENTS RESPONE : ', events);
+			console.log('EVENTS RESPONE : ', events.items?.length, events.items?.slice?.(0,2), '...');
 			events.items.forEach((item) => {
 				delete item.attendees;
 			});
@@ -106,10 +106,12 @@ const updateEvents = async () => {
 			}
 		} catch (err) {
 			console.log(err)
-			fs.writeFileSync(
-				CALENDAR_EVENTS_FS_PATH,
-				'Please login into your Google account again from the device URL',
-			);
+			if (err.statusCode === 401) {
+				fs.writeFileSync(
+					CALENDAR_EVENTS_FS_PATH,
+					'Please login into your Google account again from the device URL',
+				);
+			}
 		}
 	}
 };

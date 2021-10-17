@@ -1,14 +1,12 @@
-/* eslint-env es6 */
-
-const fs = require('fs');
-const { join } = require('path');
-const express = require('express');
-const bodyParser = require('body-parser');
-const { getSdk } = require('balena-sdk');
-const favicon = require('serve-favicon');
+import * as fs from 'fs';
+import { join } from 'path';
+import * as express from 'express';
+import * as bodyParser from 'body-parser';
+import { getSdk } from 'balena-sdk';
+import * as  favicon from 'serve-favicon';
 const app = express();
 const PORT = 80;
-const POLL_INTERVAL = process.env.EVENTS_POLL || 600000; // 10 minutes by default
+const POLL_INTERVAL = Number(process.env.EVENTS_POLL || 600000); // 10 minutes by default
 const calendarId = 'primary';
 const AUTH_TOKEN_FS_PATH = '/usr/app/auth-data/authToken';
 const CALENDAR_EVENTS_FS_PATH = '/usr/app/calendar-data/events.json';
@@ -28,7 +26,7 @@ app.set('view engine', 'html');
 app.use('/public', express.static(join(__dirname, 'public')));
 
 const JSON_REGEXP = /^application\/(([\w!//\$%&\*`\-\.\^~]*\+)?json|csp-report)/i;
-const isJson = req => {
+const isJson: bodyParser.Options['type'] = (req) => {
 	const contentType = req.headers['content-type'];
 	if (contentType == null) {
 		return false;
@@ -39,7 +37,7 @@ const isJson = req => {
 const jsonParser = bodyParser.json({ type: isJson, limit: '512kb' });
 
 // reply to request with the hello world html file
-app.get('/', function(req, res) {
+app.get('/', function(_req, res) {
 	res.render('index', {
 		GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
 		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -63,6 +61,8 @@ app.listen(PORT, () => {
 	console.log(`App listening on port ${PORT}`);
 });
 
+type Item = Record<string, any>;
+
 const updateEvents = async () => {
 	const authToken =
 		fs.existsSync(AUTH_TOKEN_FS_PATH) &&
@@ -85,12 +85,12 @@ const updateEvents = async () => {
 				},
 			});
 			console.log('EVENTS RESPONE : ', events.items?.length, events.items?.slice?.(0,2), '...');
-			events.items.forEach((item) => {
+			events.items.forEach((item: Item) => {
 				delete item.attendees;
 			});
 			const now = new Date();
 			events.items = events.items.filter(
-				({ start }) => new Date(start.dateTime ?? start.date) >= now,
+				({ start }: Item) => new Date(start.dateTime ?? start.date) >= now,
 			);
 			const storedEvents = fs.existsSync(CALENDAR_EVENTS_FS_PATH)
 				? fs.readFileSync(CALENDAR_EVENTS_FS_PATH, 'utf-8')
@@ -128,11 +128,15 @@ const restartDisplayService = async () => {
 	});
 };
 
-const poll = ({ fn, interval = POLL_INTERVAL, maxAttempts }) => {
+const poll = <T>({ fn, interval = POLL_INTERVAL, maxAttempts }: {
+	fn: () => T;
+	interval?: number;
+	maxAttempts?: number;
+}) => {
 	let attempts = 0;
 
-	const executePoll = async (resolve, reject) => {
-		const result = await fn();
+	const executePoll = async (resolve: (value: T) => void, reject: (reason?: Error) => void) => {
+		await fn();
 		attempts++;
 
 		if (maxAttempts && attempts === maxAttempts) {

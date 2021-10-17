@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2020",
+		"strict": true,
+		"useUnknownInCatchVariables": false,
+		"noUnusedParameters": true,
+		"noUnusedLocals": true,
+		"sourceMap": true,
+		"skipLibCheck": true
+	},
+	"include": [
+		"bin/**/*.ts",
+		"src/**/*.ts",
+		"test/**/*.ts",
+		"typings/**/*.d.ts",
+		"*.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}
